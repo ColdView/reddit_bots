@@ -23,20 +23,18 @@ titles = []
 sub_r = []
 score = []
 comments = []
-links = []
 times = ["week", "year", "all", "day", "hour", "month"]
 choice = ''
 URL = "http://www.reddit.com"
 
 #---Function to populate lists of the top submissions' attributes---
 def time_filter(time):
-		for submission in sub.top('{t}'.format(t=time)):#
-			titles.append(submission.title)
-			sub_r.append(submission.subreddit_name_prefixed)
-			score.append(int(submission.score))
-			comments.append(int(submission.num_comments))
-			links.append('<a href="{u}" target="_blank">{name}</a>' \
-				 .format(u=URL+submission.permalink, name="link"))
+	for submission in sub.top('{t}'.format(t=time)):#
+		titles.append('<a href="{u}" target="_blank">{name}</a>' \
+			 .format(u=URL+submission.permalink, name=submission.title))
+		sub_r.append(submission.subreddit_name_prefixed)
+		score.append(int(submission.score))
+		comments.append(int(submission.num_comments))
 
 #--------------Enforce valid user input of time interval-----------
 while True:
@@ -51,12 +49,12 @@ time_filter(time_interval)
 #------------------------Create Pandas Table-----------------------
 table = pd.DataFrame({
     "Titles": titles,
-    "Link": links,
     "Sub-Reddits": sub_r, 
     "Score": score, 
     "Comments": comments, 
     })
 
+#-------------Use User Input to choose the Sort method-------------
 while choice != "1" or "2":
 	print("[1]  To sort by score enter 1")
 	print("[2]  To sort by comments enter 2\n")
@@ -70,10 +68,12 @@ while choice != "1" or "2":
 	else:
 		continue
 
-table = table.sort_values(choice, ascending=False)
+#--Configure Pandas Display Options, Sort Method and Output Format--
+def table_output(table):
+	pd.set_option('display.max_colwidth', 250)
+	pd.set_option('max_rows', 100)
+	pd.set_option('colheader_justify', 'left')
+	table.sort_values(choice, ascending=False)
+	table.to_html('info_sec_table.html', escape=False)
 
-#-----------------Configure Pandas Table Display Options-----------
-pd.set_option('display.max_colwidth', 150)
-pd.set_option('max_rows', 100)
-pd.set_option('colheader_justify', 'left')
-table.to_html('red_sec.html', escape=False)
+table_output(table)
