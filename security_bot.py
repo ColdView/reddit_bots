@@ -26,15 +26,19 @@ comments = []
 times = ["week", "year", "all", "day", "hour", "month"]
 choice = ''
 URL = "http://www.reddit.com"
+inp = input("Enter search term or leave blank for full list! ").lower()
 
 #---Function to populate lists of the top submissions' attributes---
 def time_filter(time):
-	for submission in sub.top('{t}'.format(t=time)):#
-		titles.append('<a href="{u}" target="_blank">{name}</a>' \
-			 .format(u=URL+submission.permalink, name=submission.title))
-		sub_r.append(submission.subreddit_name_prefixed)
-		score.append(int(submission.score))
-		comments.append(int(submission.num_comments))
+	for submission in sub.top('{t}'.format(t=time)):
+		if inp in submission.title.lower().split() or inp == "":
+			titles.append('<a href="{u}" target="_blank">{name}</a>' \
+				 .format(u=URL+submission.permalink, name=submission.title))
+			sub_r.append(submission.subreddit_name_prefixed)
+			score.append(int(submission.score))
+			comments.append(int(submission.num_comments))
+		else:
+			continue
 
 #--------------Enforce valid user input of time interval-----------
 while True:
@@ -73,7 +77,7 @@ def table_output(table):
 	pd.set_option('display.max_colwidth', 250)
 	pd.set_option('max_rows', 100)
 	pd.set_option('colheader_justify', 'left')
-	table.sort_values(choice, ascending=False)
+	table.sort_values(choice, inplace=True, ascending=False)
 	table.to_html('info_sec_table.html', escape=False)
 
 table_output(table)
