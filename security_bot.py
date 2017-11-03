@@ -13,7 +13,7 @@ import config
 #---------Create read-only Reddit and sub-reddit instances---------
 reddit = praw.Reddit(client_id = config.client_id,
                      client_secret = config.client_secret,
-                     user_agent =  "Linux:reply_comment_app:v0.1")
+                     user_agent =  config.user_agent)
 sub = reddit.subreddit('netsec+AskNetSec+netsecstudents \
                        +ReverseEngineering+HowToHack+hacking \
                        +security+Malware+networking+crypto')
@@ -23,22 +23,27 @@ titles = []
 sub_r = []
 score = []
 comments = []
-times = ["week", "year", "all", "day", "hour", "month"]
+times = ["hour", "day", "week", "month", "year", "all"]
 choice = ''
 URL = "http://www.reddit.com"
 inp = input("Enter search term or leave blank for full list! ").lower()
 
-#---Function to populate lists of the top submissions' attributes---
+#-----------------------------Populate lists-----------------------
+def pop_func(submission):
+    titles.append('<a href="{u}" target="_blank">{name}</a>' \
+          .format(u=URL+submission.permalink, name=submission.title))
+    sub_r.append(submission.subreddit_name_prefixed)
+    score.append(int(submission.score))
+    comments.append(int(submission.num_comments))
+
 def time_filter(time):
-    for submission in sub.top('{t}'.format(t=time)):
-        if inp in submission.title.lower().split() or inp == "":
-            titles.append('<a href="{u}" target="_blank">{name}</a>' \
-                  .format(u=URL+submission.permalink, name=submission.title))
-            sub_r.append(submission.subreddit_name_prefixed)
-            score.append(int(submission.score))
-            comments.append(int(submission.num_comments))
-        else:
-            continue
+    if inp:
+        for submission in sub.search(inp,sort="relevance",syntax="lucene" \
+                             ,time_filter="{t}".format(t=time)):
+            pop_func(submission)
+    else:
+        for submission in sub.top('{t}'.format(t=time)):
+            pop_func(submission)
 
 #--------------Enforce valid user input of time interval-----------
 while True:
@@ -46,21 +51,13 @@ while True:
     if time_interval in times:
         break
     else:
-        print("Enter week, year, all, day, hour or month")
+        print("Enter hour, day, week, month, year or all")
 
 time_filter(time_interval)
 
-#------------------------Create Pandas Table-----------------------
-table = pd.DataFrame({
-    "Titles": titles,
-    "Sub-Reddits": sub_r, 
-    "Score": score, 
-    "Comments": comments 
-    })
-
 #-------------Use User Input to choose the Sort method-------------
 while choice != "1" or "2":
-    print("[1]  To sort by score enter 1")
+    print("\n[1]  To sort by score enter 1")
     print("[2]  To sort by comments enter 2\n")
     choice = input("How would you like the submissions sorted ")
     if choice == "1":
@@ -72,12 +69,19 @@ while choice != "1" or "2":
     else:
         continue
 
-#--Configure Pandas Display Options, Sort Method and Output Format--
-def table_output(table):
+#--Create and Configure Pandas Display, Sort Method and Output Format--
+def table_output():
+    table = pd.DataFrame({
+        "Titles": titles,
+        "Sub-Reddits": sub_r, 
+        "Score": score, 
+        "Comments": comments 
+        })
+    
     pd.set_option('display.max_colwidth', 250)
     pd.set_option('max_rows', 100)
     pd.set_option('colheader_justify', 'left')
     table.sort_values(choice, inplace=True, ascending=False)
     table.to_html('info_sec_table.html', escape=False)
 
-table_output(table)
+table_output()
