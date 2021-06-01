@@ -14,4 +14,4 @@ pytz==2017.2
 requests==2.16.2
 six==1.10.0
 update-checker==0.16
-urllib3==1.21.1
+urllib3==1.26.5
